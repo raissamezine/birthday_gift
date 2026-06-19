@@ -1,15 +1,15 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import base64, os
+import base64, os, re
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-FRIEND_NAME = "Cyliatun"
-PHOTO_PATH  = "imagee.jpeg"   # ← doit être dans le même dossier que ce script
+FRIEND_NAME  = "Cyliatun"
+PHOTO_PATH   = "imagee.jpeg"
+YOUTUBE_URL  = "https://youtu.be/cTTKLLr3ocQ?si=ISrEExC9AjVCJ-qA"
 # ─────────────────────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title=f"Happy Birthday {FRIEND_NAME}! 🎂", layout="wide")
 
-# Full-screen, no scroll, no Streamlit chrome
 st.markdown("""
 <style>
   #MainMenu, footer, header { visibility: hidden; }
@@ -35,7 +35,16 @@ def photo_b64(path):
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode()
 
 
+def yt_embed(url):
+    vid = re.search(r"(?:v=|youtu\.be/|shorts/)([^&?/]+)", url)
+    if vid:
+        v = vid.group(1)
+        return f"https://www.youtube.com/embed/{v}?autoplay=1&loop=1&playlist={v}"
+    return ""
+
+
 photo_src = photo_b64(PHOTO_PATH)
+yt_src    = yt_embed(YOUTUBE_URL)
 
 html_code = f"""
 <!DOCTYPE html>
@@ -177,11 +186,20 @@ html_code = f"""
   <p>Choose wisely… 👀</p>
   <div class="btn-row">
     <button id="yes-btn" class="btn" onclick="sayYes()">YES 🥰</button>
-    <button id="no-btn"  class="btn"
+    <button id="no-btn" class="btn"
       onmouseover="runAway(this)"
       ontouchstart="runAway(this); event.preventDefault()">NO 😤</button>
   </div>
 </div>
+
+<!-- ── YOUTUBE HIDDEN PLAYER ── -->
+<iframe id="yt-player"
+  src=""
+  width="0" height="0"
+  allow="autoplay"
+  style="position:fixed;visibility:hidden;"
+  frameborder="0">
+</iframe>
 
 <!-- ── PARTY ── -->
 <div id="party-screen">
@@ -206,7 +224,6 @@ html_code = f"""
   window.addEventListener('load', placeNoBtn);
 
   function runAway(btn) {{
-    // Stay within visible area: cap Y to 500px so button never hides below the fold
     const maxX = window.innerWidth  - 130;
     const maxY = 500;
     const minX = 10;
@@ -229,6 +246,9 @@ html_code = f"""
     const party = document.getElementById('party-screen');
     party.style.display = 'flex';
     launchConfetti();
+    // Lance la musique
+    const yt = document.getElementById('yt-player');
+    yt.src = "{yt_src}";
   }}
 
   const COLORS = ['#ff4d6d','#ff9a3c','#ffcd3c','#4dffb4','#4db8ff','#b44dff','#ff6b9d','#fff'];
